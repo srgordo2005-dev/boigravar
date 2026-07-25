@@ -1,0 +1,18 @@
+{
+  "name": "Boi Audio (Modulo Externo)",
+  "version": "1.0.0",
+  "home_assistant_domain": "esphome",
+  "funding_url": "https://esphome.io/guides/supporters.html",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        { "path": "esp32_boi_modulo_externo/build/esp32.esp32.esp32doit-devkit-v1/esp32_boi_modulo_externo.ino.bootloader.bin", "offset": 4096 },
+        { "path": "esp32_boi_modulo_externo/build/esp32.esp32.esp32doit-devkit-v1/esp32_boi_modulo_externo.ino.partitions.bin", "offset": 32768 },
+        { "path": "esp32_boi_modulo_externo/build/esp32.esp32.esp32doit-devkit-v1/boot_app0.bin", "offset": 57344 },
+        { "path": "esp32_boi_modulo_externo/build/esp32.esp32.esp32doit-devkit-v1/esp32_boi_modulo_externo.ino.bin", "offset": 65536 }
+      ]
+    }
+  ]
+}

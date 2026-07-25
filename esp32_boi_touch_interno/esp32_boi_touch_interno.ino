@@ -60,6 +60,10 @@ bool isAPMode = false;
 bool licenciado = false;
 bool bloqueado = false;
 
+int baseTouch1 = 50;
+int baseTouch2 = 50;
+const int offsetSensibilidade = 15; // O quanto a leitura tem que cair para considerar um toque
+
 const char INDEX_HTML[] PROGMEM = R"HTML(
 <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
@@ -87,6 +91,8 @@ small{color:#888}
 <div class="card"><b>Controles Extras (Reles)</b><br>
 <button id="r1" onclick="tgR(1)">Ligar Rele 1 (Pino 4)</button>
 <button id="r2" onclick="tgR(2)">Ligar Rele 2 (Pino 5)</button>
+<hr style="border-color:#333; margin:10px 0;">
+<button onclick="calib()" style="background:#f39c12;">Calibrar Sensibilidade do Touch (Fita Cobre)</button>
 </div>
 <div class="card"><b>Enviar novo audio</b><br><small>So MP3 curto (mono, 64kbps)</small><br>
 <input type="file" id="f" accept=".mp3"><button onclick="up()">Enviar</button>
@@ -116,6 +122,12 @@ async function up(){
   await fetch('/upload',{method:'POST',body:fd});
   document.getElementById('prog').innerText='Concluido!';
   carregar();
+}
+async function calib(){
+  document.getElementById('prog').innerText='Calibrando... não toque em nada!';
+  await fetch('/calib');
+  alert('Calibrado com sucesso! A sensibilidade foi ajustada para a madeira atual.');
+  document.getElementById('prog').innerText='';
 }
 async function del(n){ await fetch('/delete?file='+encodeURIComponent(n)); carregar(); }
 async function play(n){ await fetch('/play?file='+encodeURIComponent(n)); }
@@ -268,6 +280,16 @@ void setupWebServer() {
     r->send(200, "text/plain", "ok");
   });
 
+  server.on("/calib", HTTP_GET, [](AsyncWebServerRequest *r){
+    int t1 = 0, t2 = 0;
+    for(int i=0; i<10; i++){ t1 += touchRead(TOUCH1_PIN); t2 += touchRead(TOUCH2_PIN); delay(10); }
+    baseTouch1 = t1 / 10;
+    baseTouch2 = t2 / 10;
+    prefs.putInt("bT1", baseTouch1);
+    prefs.putInt("bT2", baseTouch2);
+    r->send(200, "text/plain", "ok");
+  });
+
   server.on("/upload", HTTP_POST,
     [](AsyncWebServerRequest *r){ r->send(200); },
     [](AsyncWebServerRequest *r, String filename, size_t index, uint8_t *data, size_t len, bool final){
@@ -302,6 +324,8 @@ void setup() {
   trackTouch2 = prefs.getString("t2", "");
   licenciado = prefs.getBool("lic", false);
   bloqueado = prefs.getBool("blq", false);
+  baseTouch1 = prefs.getInt("bT1", 50);
+  baseTouch2 = prefs.getInt("bT2", 50);
   
   String savedSSID = prefs.getString("ssid", "");
   String savedPass = prefs.getString("pass", "");
@@ -385,12 +409,12 @@ void loop() {
       }
     }
 
-    if (touchRead(TOUCH1_PIN) < TOUCH_THRESHOLD && millis() - ultimoTouch1 > DEBOUNCE_MS) {
+    if (touchRead(TOUCH1_PIN) < (baseTouch1 - offsetSensibilidade) && millis() - ultimoTouch1 > DEBOUNCE_MS) {
       ultimoTouch1 = millis();
       if (trackTouch1 != "") { ligarAmpliETocar(trackTouch1); }
     }
 
-    if (touchRead(TOUCH2_PIN) < TOUCH_THRESHOLD && millis() - ultimoTouch2 > DEBOUNCE_MS) {
+    if (touchRead(TOUCH2_PIN) < (baseTouch2 - offsetSensibilidade) && millis() - ultimoTouch2 > DEBOUNCE_MS) {
       ultimoTouch2 = millis();
       if (trackTouch2 != "") { ligarAmpliETocar(trackTouch2); }
     }

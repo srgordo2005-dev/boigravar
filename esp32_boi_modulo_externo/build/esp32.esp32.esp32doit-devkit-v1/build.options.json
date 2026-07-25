@@ -1,0 +1,10 @@
+{
+  "additionalFiles": "",
+  "builtInLibrariesFolders": "C:\\Users\\Felip\\AppData\\Local\\Arduino15\\libraries",
+  "compiler.optimization_flags": "-Os",
+  "customBuildProperties": "",
+  "fqbn": "esp32:esp32:esp32doit-devkit-v1:UploadSpeed=921600,FlashFreq=80,DebugLevel=none,EraseFlash=none",
+  "hardwareFolders": "C:\\Users\\Felip\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11,C:\\Users\\Felip\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11",
+  "otherLibrariesFolders": "c:\\Users\\Felip\\OneDrive\\Documentos\\Arduino\\libraries",
+  "sketchLocation": "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_modulo_externo"
+}

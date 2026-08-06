@@ -32,8 +32,8 @@ unsigned long lastBotCheck = 0;
 #define TOUCH1_PIN  32
 #define TOUCH2_PIN  33
 #define RELAY_PIN   14
-#define RELE_AUX1   4
-#define RELE_AUX2   5
+#define BOTAO1_PIN  4
+#define BOTAO2_PIN  5
 
 #define TEMPO_DESLIGAR_MS 20000
 #define DEBOUNCE_MS       1000   
@@ -50,7 +50,9 @@ AudioOutputI2S *out;
 bool ampliLigado = false;
 unsigned long ultimaAtividade = 0;
 unsigned long ultimoTouch1 = 0, ultimoTouch2 = 0;
+unsigned long ultimoBotao1 = 0, ultimoBotao2 = 0;
 String trackTouch1, trackTouch2;
+String trackBotao1, trackBotao2;
 
 bool esperandoAmpli = false;
 unsigned long tempoInicioAmpli = 0;
@@ -59,6 +61,9 @@ String trackPendente = "";
 bool isAPMode = false;
 bool licenciado = false;
 bool bloqueado = false;
+int offline_plays = 0;
+
+String scanJson = "[]";
 
 int baseTouch1 = 50;
 int baseTouch2 = 50;
@@ -68,52 +73,82 @@ const char INDEX_HTML[] PROGMEM = R"HTML(
 <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:16px}
-h2{color:#4fd1c5}
+h2{color:#4fd1c5; margin-bottom:5px;}
+#status{padding:10px;border-radius:8px;font-weight:bold;margin-bottom:14px;text-align:center;}
+.liberado{background:#2ecc71;color:#000} .aguardando{background:#f1c40f;color:#000} .bloqueado{background:#e74c3c;color:#fff}
 .card{background:#1c1c1c;border-radius:12px;padding:14px;margin-bottom:14px}
 select,input[type=file],input[type=range],input[type=text],input[type=password]{width:100%;padding:8px;margin-top:6px;border-radius:8px;border:none;box-sizing:border-box}
-button{background:#4fd1c5;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;margin-top:8px;cursor:pointer}
+button{background:#4fd1c5;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;margin-top:8px;cursor:pointer;color:#000}
 .btn-play{background:#2ecc71;padding:6px 12px;margin-left:10px}
-.btn-red{background:#e74c3c}
 li{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #333}
 .acoes{display:flex;gap:10px}
 a{color:#ff6b6b;text-decoration:none}
 small{color:#888}
 </style></head><body>
-<h2>Painel do Boi (Touch Interno)</h2>
+<h2>Painel do Boi</h2>
+<div id="status" class="aguardando">Carregando status...</div>
+
 <div class="card"><b>Configurar Wi-Fi e Nome</b><br>
 <form action="/savewifi" method="GET">
-<input type="text" name="bname" placeholder="Nome do Boi (Ex: Boi 01)" required>
-<input type="text" name="ssid" placeholder="Nome da Rede (SSID)" required>
+<input type="text" id="iptNome" name="bname" placeholder="Nome do Boi (Ex: Boi 01)" required>
+<input type="text" name="ssid" list="redes" placeholder="Nome da Rede (SSID)" required autocomplete="off">
+<datalist id="redes"></datalist>
 <input type="password" name="pass" placeholder="Senha da Rede">
 <button type="submit">Salvar e Conectar</button>
 </form>
 </div>
-<div class="card"><b>Controles Extras (Reles)</b><br>
-<button id="r1" onclick="tgR(1)">Ligar Rele 1 (Pino 4)</button>
-<button id="r2" onclick="tgR(2)">Ligar Rele 2 (Pino 5)</button>
-<hr style="border-color:#333; margin:10px 0;">
-<button onclick="calib()" style="background:#f39c12;">Calibrar Sensibilidade do Touch (Fita Cobre)</button>
-</div>
+
 <div class="card"><b>Enviar novo audio</b><br><small>So MP3 curto (mono, 64kbps)</small><br>
 <input type="file" id="f" accept=".mp3"><button onclick="up()">Enviar</button>
 <div id="prog"></div></div>
+
 <div class="card"><b>Faixas salvas no Boi</b><ul id="lista"></ul></div>
-<div class="card"><b>Tocar no Touch 1</b><select id="t1" onchange="salvar(1)"></select></div>
-<div class="card"><b>Tocar no Touch 2</b><select id="t2" onchange="salvar(2)"></select></div>
+
+<div class="card"><b>Calibração do Touch Interno</b><br>
+<button onclick="calib()" style="background:#f39c12; width:100%;">Calibrar Sensibilidade</button>
+</div>
+
+<div class="card">
+<b>Atalhos de Áudio</b><br><br>
+Tocar no Touch 1<select id="t1" onchange="salvar('t1')"></select><br>
+Tocar no Touch 2<select id="t2" onchange="salvar('t2')"></select><br>
+Tocar no Botão 1 (Pino 4)<select id="b1" onchange="salvar('b1')"></select><br>
+Tocar no Botão 2 (Pino 5)<select id="b2" onchange="salvar('b2')"></select>
+</div>
 <div class="card"><b>Volume Geral</b><input type="range" min="0" max="100" id="vol" onchange="setVol(this.value)"></div>
+
 <script>
 async function carregar(){
+  let sR = await fetch('/status'); let sJ = await sR.json();
+  let st = document.getElementById('status');
+  if(sJ.blq){ st.className='bloqueado'; st.innerText='🔴 TRAVADO ('+sJ.offp+'/100 offline plays)'; }
+  else if(sJ.lic){ st.className='liberado'; st.innerText='🟢 LIBERADO ('+sJ.offp+'/100 offline plays)'; }
+  else{ st.className='aguardando'; st.innerText='🟡 AGUARDANDO LIBERAÇÃO'; }
+  
+  if(sJ.bname && sJ.bname != "Boi sem nome"){
+    document.getElementById('iptNome').style.display = 'none';
+    document.getElementById('iptNome').value = sJ.bname;
+  }
+
   let r = await fetch('/list'); let arr = await r.json();
   let ul=document.getElementById('lista'); ul.innerHTML='';
-  let t1=document.getElementById('t1'), t2=document.getElementById('t2');
-  t1.innerHTML='<option value="">Nenhum</option>'; t2.innerHTML='<option value="">Nenhum</option>';
+  let ids=['t1','t2','b1','b2'];
+  ids.forEach(id => { document.getElementById(id).innerHTML='<option value="">Nenhum</option>'; });
+  
   arr.forEach(n=>{
     ul.innerHTML+=`<li>${n} <div class="acoes"><button class="btn-play" onclick="play('${n}')">▶</button><a href="#" onclick="del('${n}')">apagar</a></div></li>`;
-    t1.innerHTML+=`<option value="${n}">${n}</option>`;
-    t2.innerHTML+=`<option value="${n}">${n}</option>`;
+    ids.forEach(id => { document.getElementById(id).innerHTML+=`<option value="${n}">${n}</option>`; });
   });
+  
   let sel = await (await fetch('/getsel')).json();
-  t1.value = sel.t1; t2.value = sel.t2;
+  document.getElementById('t1').value = sel.t1; document.getElementById('t2').value = sel.t2;
+  document.getElementById('b1').value = sel.b1; document.getElementById('b2').value = sel.b2;
+
+  try {
+    let rs = await fetch('/scan'); let rArr = await rs.json();
+    let dl = document.getElementById('redes');
+    rArr.forEach(s => { dl.innerHTML += `<option value="${s}">`; });
+  } catch(e){}
 }
 async function up(){
   let f=document.getElementById('f').files[0]; if(!f) return;
@@ -124,32 +159,40 @@ async function up(){
   carregar();
 }
 async function calib(){
-  document.getElementById('prog').innerText='Calibrando... não toque em nada!';
+  document.getElementById('prog').innerText='Calibrando...';
   await fetch('/calib');
-  alert('Calibrado com sucesso! A sensibilidade foi ajustada para a madeira atual.');
+  alert('Calibrado com sucesso!');
   document.getElementById('prog').innerText='';
 }
 async function del(n){ await fetch('/delete?file='+encodeURIComponent(n)); carregar(); }
 async function play(n){ await fetch('/play?file='+encodeURIComponent(n)); }
 async function salvar(qual){
-  let v = document.getElementById('t'+qual).value;
-  await fetch(`/select?touch=${qual}&file=${encodeURIComponent(v)}`);
+  let v = document.getElementById(qual).value;
+  await fetch(`/select?qual=${qual}&file=${encodeURIComponent(v)}`);
 }
 async function setVol(v){ await fetch('/volume?v='+v); }
-async function tgR(id){
-  let b = document.getElementById('r'+id);
-  let state = b.innerText.includes('Ligar') ? 1 : 0;
-  await fetch(`/relay?id=${id}&st=${state}`);
-  b.innerText = state ? `Desligar Rele ${id}` : `Ligar Rele ${id}`;
-  b.className = state ? 'btn-red' : '';
-}
 carregar();
 </script></body></html>
 )HTML";
 
 void tocarAgora(String nomeArquivo) {
-  if (!licenciado || bloqueado) return; // Sistema de Licença
   if (nomeArquivo == "") return;
+  if (!licenciado || bloqueado) return;
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    if (offline_plays > 0) { offline_plays = 0; prefs.putInt("offp", 0); }
+  } else {
+    offline_plays++;
+    prefs.putInt("offp", offline_plays);
+    if (offline_plays >= 100) {
+      if (mp3->isRunning()) mp3->stop();
+      if (file) delete file;
+      file = new AudioFileSourceLittleFS("/desconectado.mp3");
+      if(file->isOpen()) { mp3->begin(file, out); ultimaAtividade = millis(); }
+      return; 
+    }
+  }
+
   if (mp3->isRunning()) mp3->stop();
   if (file) delete file;
   
@@ -164,7 +207,8 @@ void tocarAgora(String nomeArquivo) {
 }
 
 void ligarAmpliETocar(String track) {
-  if (!licenciado || bloqueado) return; // Sistema de Licença
+  if (track == "") return;
+  if (!licenciado || bloqueado) return;
   ultimaAtividade = millis();
   if (!ampliLigado) {
     digitalWrite(RELAY_PIN, HIGH);
@@ -242,15 +286,30 @@ void setupWebServer() {
     r->send(200, "application/json", json);
   });
 
+  server.on("/scan", HTTP_GET, [](AsyncWebServerRequest *r){
+    r->send(200, "application/json", scanJson);
+  });
+
+  server.on("/status", HTTP_GET, [](AsyncWebServerRequest *r){
+    String bname = prefs.getString("bname", "");
+    String json = "{\"lic\":" + String(licenciado ? "true" : "false") + 
+                  ",\"blq\":" + String(bloqueado ? "true" : "false") + 
+                  ",\"offp\":" + String(offline_plays) + 
+                  ",\"bname\":\"" + bname + "\"}";
+    r->send(200, "application/json", json);
+  });
+
   server.on("/getsel", HTTP_GET, [](AsyncWebServerRequest *r){
-    r->send(200, "application/json", "{\"t1\":\"" + trackTouch1 + "\",\"t2\":\"" + trackTouch2 + "\"}");
+    r->send(200, "application/json", "{\"t1\":\"" + trackTouch1 + "\",\"t2\":\"" + trackTouch2 + "\",\"b1\":\"" + trackBotao1 + "\",\"b2\":\"" + trackBotao2 + "\"}");
   });
 
   server.on("/select", HTTP_GET, [](AsyncWebServerRequest *r){
-    int touch = r->getParam("touch")->value().toInt();
+    String qual = r->getParam("qual")->value();
     String file = r->getParam("file")->value();
-    if (touch == 1) { trackTouch1 = file; prefs.putString("t1", file); }
-    else { trackTouch2 = file; prefs.putString("t2", file); }
+    if (qual == "t1") { trackTouch1 = file; prefs.putString("t1", file); }
+    else if (qual == "t2") { trackTouch2 = file; prefs.putString("t2", file); }
+    else if (qual == "b1") { trackBotao1 = file; prefs.putString("b1", file); }
+    else if (qual == "b2") { trackBotao2 = file; prefs.putString("b2", file); }
     r->send(200, "text/plain", "ok");
   });
 
@@ -269,14 +328,6 @@ void setupWebServer() {
   server.on("/play", HTTP_GET, [](AsyncWebServerRequest *r){
     String file = r->getParam("file")->value();
     ligarAmpliETocar(file);
-    r->send(200, "text/plain", "ok");
-  });
-
-  server.on("/relay", HTTP_GET, [](AsyncWebServerRequest *r){
-    int id = r->getParam("id")->value().toInt();
-    int st = r->getParam("st")->value().toInt();
-    if(id == 1) digitalWrite(RELE_AUX1, st ? HIGH : LOW);
-    if(id == 2) digitalWrite(RELE_AUX2, st ? HIGH : LOW);
     r->send(200, "text/plain", "ok");
   });
 
@@ -307,11 +358,8 @@ void setup() {
   pinMode(PIR_PIN, INPUT);
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, LOW);
-  
-  pinMode(RELE_AUX1, OUTPUT);
-  pinMode(RELE_AUX2, OUTPUT);
-  digitalWrite(RELE_AUX1, LOW);
-  digitalWrite(RELE_AUX2, LOW);
+  pinMode(BOTAO1_PIN, INPUT_PULLUP);
+  pinMode(BOTAO2_PIN, INPUT_PULLUP);
 
   LittleFS.begin(true);
 
@@ -322,8 +370,12 @@ void setup() {
   prefs.begin("audio", false);
   trackTouch1 = prefs.getString("t1", "");
   trackTouch2 = prefs.getString("t2", "");
+  trackBotao1 = prefs.getString("b1", "");
+  trackBotao2 = prefs.getString("b2", "");
+  
   licenciado = prefs.getBool("lic", false);
   bloqueado = prefs.getBool("blq", false);
+  offline_plays = prefs.getInt("offp", 0);
   baseTouch1 = prefs.getInt("bT1", 50);
   baseTouch2 = prefs.getInt("bT2", 50);
   
@@ -366,11 +418,27 @@ void setup() {
   }
 
   if (!connected) {
-    Serial.println("Iniciando rede do Boi...");
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP("BOI-AUDIO-CONFIG", "12345678"); 
+    Serial.println("Iniciando rede do Boi e Escaneando Wi-Fi...");
+    WiFi.mode(WIFI_AP_STA);
+    
+    int n = WiFi.scanNetworks();
+    scanJson = "[";
+    for (int i = 0; i < n; ++i) {
+      if (i > 0) scanJson += ",";
+      scanJson += "\"" + WiFi.SSID(i) + "\"";
+    }
+    scanJson += "]";
+
+    String mac = WiFi.macAddress();
+    mac.replace(":", "");
+    String apName = "BOI-AUDIO-" + mac.substring(mac.length() - 4);
+    apName.toUpperCase();
+
+    WiFi.softAP(apName.c_str(), "12345678"); 
     isAPMode = true;
-    Serial.print("Rede AP criada! IP: ");
+    Serial.print("Rede AP criada: ");
+    Serial.print(apName);
+    Serial.print(" | IP: ");
     Serial.println(WiFi.softAPIP());
     ligarAmpliETocar("desconectado.mp3");
   }
@@ -417,6 +485,16 @@ void loop() {
     if (touchRead(TOUCH2_PIN) < (baseTouch2 - offsetSensibilidade) && millis() - ultimoTouch2 > DEBOUNCE_MS) {
       ultimoTouch2 = millis();
       if (trackTouch2 != "") { ligarAmpliETocar(trackTouch2); }
+    }
+
+    if (digitalRead(BOTAO1_PIN) == LOW && millis() - ultimoBotao1 > DEBOUNCE_MS) {
+      ultimoBotao1 = millis();
+      if (trackBotao1 != "") { ligarAmpliETocar(trackBotao1); }
+    }
+
+    if (digitalRead(BOTAO2_PIN) == LOW && millis() - ultimoBotao2 > DEBOUNCE_MS) {
+      ultimoBotao2 = millis();
+      if (trackBotao2 != "") { ligarAmpliETocar(trackBotao2); }
     }
   }
 

@@ -70,7 +70,7 @@ int baseTouch2 = 50;
 const int offsetSensibilidade = 15; // O quanto a leitura tem que cair para considerar um toque
 
 const char INDEX_HTML[] PROGMEM = R"HTML(
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:16px}
 h2{color:#4fd1c5; margin-bottom:5px;}
@@ -103,6 +103,14 @@ small{color:#888}
 <div id="prog"></div></div>
 
 <div class="card"><b>Faixas salvas no Boi</b><ul id="lista"></ul></div>
+
+<div class="card"><b>Monitor de Touch (Ao Vivo)</b><br>
+<small style="color:#aaa;"><b>Valores Normais para Placa Preta (ESP32 DevKit):</b><br>
+Fica estável ao redor de 50 a 70 quando solto. Quando você encosta na fita de cobre, <b>o valor deve CAIR</b> para a casa dos 10 ou 20.<br><br>
+<b>Dica de Calibração:</b> Solte os fios, deixe o valor estabilizar e então clique no botão de Calibrar Sensibilidade abaixo.</small>
+<div style="font-size:20px; margin-top:10px; color:#f1c40f;">Touch 1 (Pino 32): <span id="valT1">--</span></div>
+<div style="font-size:20px; margin-top:5px; color:#f1c40f;">Touch 2 (Pino 33): <span id="valT2">--</span></div>
+</div>
 
 <div class="card"><b>Calibração do Touch Interno</b><br>
 <button onclick="calib()" style="background:#f39c12; width:100%;">Calibrar Sensibilidade</button>
@@ -150,6 +158,17 @@ async function carregar(){
     rArr.forEach(s => { dl.innerHTML += `<option value="${s}">`; });
   } catch(e){}
 }
+
+async function getLiveTouch(){
+  try {
+    let r = await fetch('/touch_status');
+    let j = await r.json();
+    document.getElementById('valT1').innerText = j.t1;
+    document.getElementById('valT2').innerText = j.t2;
+  } catch(e){}
+}
+setInterval(getLiveTouch, 500);
+
 async function up(){
   let f=document.getElementById('f').files[0]; if(!f) return;
   let fd=new FormData(); fd.append('file',f);
@@ -339,6 +358,15 @@ void setupWebServer() {
     prefs.putInt("bT1", baseTouch1);
     prefs.putInt("bT2", baseTouch2);
     r->send(200, "text/plain", "ok");
+  });
+
+  server.on("/touch_status", HTTP_GET, [](AsyncWebServerRequest *r){
+    String json = "{\"t1\":";
+    json += touchRead(TOUCH1_PIN);
+    json += ",\"t2\":";
+    json += touchRead(TOUCH2_PIN);
+    json += "}";
+    r->send(200, "application/json", json);
   });
 
   server.on("/upload", HTTP_POST,

@@ -8,10 +8,10 @@
     {
       "chipFamily": "ESP32",
       "parts": [
-        { "path": "esp32_boi_touch_interno/build/esp32.esp32.esp32doit-devkit-v1/esp32_boi_touch_interno.ino.bootloader.bin", "offset": 4096 },
-        { "path": "esp32_boi_touch_interno/build/esp32.esp32.esp32doit-devkit-v1/esp32_boi_touch_interno.ino.partitions.bin", "offset": 32768 },
-        { "path": "esp32_boi_touch_interno/build/esp32.esp32.esp32doit-devkit-v1/boot_app0.bin", "offset": 57344 },
-        { "path": "esp32_boi_touch_interno/build/esp32.esp32.esp32doit-devkit-v1/esp32_boi_touch_interno.ino.bin", "offset": 65536 }
+        { "path": "esp32_boi_touch_interno/build/esp32.esp32.esp32/esp32_boi_touch_interno.ino.bootloader.bin", "offset": 4096 },
+        { "path": "esp32_boi_touch_interno/build/esp32.esp32.esp32/esp32_boi_touch_interno.ino.partitions.bin", "offset": 32768 },
+        { "path": "esp32_boi_touch_interno/build/esp32.esp32.esp32/boot_app0.bin", "offset": 57344 },
+        { "path": "esp32_boi_touch_interno/build/esp32.esp32.esp32/esp32_boi_touch_interno.ino.bin", "offset": 65536 }
       ]
     }
   ]

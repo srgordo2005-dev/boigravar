@@ -67,7 +67,7 @@ String scanJson = "[]";
 
 int baseTouch1 = 50;
 int baseTouch2 = 50;
-const int offsetSensibilidade = 15; // O quanto a leitura tem que cair para considerar um toque
+const int offsetSensibilidade = 350; // O quanto a leitura tem que cair para considerar um toque
 
 const char INDEX_HTML[] PROGMEM = R"HTML(
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -105,11 +105,10 @@ small{color:#888}
 <div class="card"><b>Faixas salvas no Boi</b><ul id="lista"></ul></div>
 
 <div class="card"><b>Monitor de Touch (Ao Vivo)</b><br>
-<small style="color:#aaa;"><b>Valores Normais para Placa Preta (ESP32 DevKit):</b><br>
-Fica estável ao redor de 50 a 70 quando solto. Quando você encosta na fita de cobre, <b>o valor deve CAIR</b> para a casa dos 10 ou 20.<br><br>
-<b>Dica de Calibração:</b> Solte os fios, deixe o valor estabilizar e então clique no botão de Calibrar Sensibilidade abaixo.</small>
-<div style="font-size:20px; margin-top:10px; color:#f1c40f;">Touch 1 (Pino 32): <span id="valT1">--</span></div>
-<div style="font-size:20px; margin-top:5px; color:#f1c40f;">Touch 2 (Pino 33): <span id="valT2">--</span></div>
+<small style="color:#aaa;"><b>Dica de Calibração:</b> Solte os fios, deixe o valor estabilizar e clique em Calibrar Sensibilidade.</small>
+<div style="font-size:20px; margin-top:10px; color:#f1c40f;">Touch 1 (Pino 32): <span id="valT1">--</span> <small style="color:#888; font-size:14px;" id="calT1"></small></div>
+<div style="font-size:20px; margin-top:5px; color:#f1c40f;">Touch 2 (Pino 33): <span id="valT2">--</span> <small style="color:#888; font-size:14px;" id="calT2"></small></div>
+<div style="margin-top:15px; padding:10px; border-radius:8px; text-align:center; font-weight:bold; background:#333; color:#888;" id="indicadorVoz">Boi em silêncio</div>
 </div>
 
 <div class="card"><b>Calibração do Touch Interno</b><br>
@@ -165,9 +164,20 @@ async function getLiveTouch(){
     let j = await r.json();
     document.getElementById('valT1').innerText = j.t1;
     document.getElementById('valT2').innerText = j.t2;
+    document.getElementById('calT1').innerText = `(Base: ${j.b1} | Dispara se < ${j.b1 - j.offset})`;
+    document.getElementById('calT2').innerText = `(Base: ${j.b2} | Dispara se < ${j.b2 - j.offset})`;
+    
+    let ind = document.getElementById('indicadorVoz');
+    if(j.play){ ind.style.background='#2ecc71'; ind.style.color='#000'; ind.innerText='🔊 TOCANDO AGORA!'; }
+    else { ind.style.background='#333'; ind.style.color='#888'; ind.innerText='Boi em silêncio'; }
   } catch(e){}
 }
 setInterval(getLiveTouch, 500);
+
+async function calib(){
+  await fetch('/calib');
+  alert('Calibrado com sucesso!');
+}
 
 async function up(){
   let f=document.getElementById('f').files[0]; if(!f) return;
@@ -365,6 +375,14 @@ void setupWebServer() {
     json += touchRead(TOUCH1_PIN);
     json += ",\"t2\":";
     json += touchRead(TOUCH2_PIN);
+    json += ",\"b1\":";
+    json += baseTouch1;
+    json += ",\"b2\":";
+    json += baseTouch2;
+    json += ",\"offset\":";
+    json += offsetSensibilidade;
+    json += ",\"play\":";
+    json += (mp3->isRunning() ? "true" : "false");
     json += "}";
     r->send(200, "application/json", json);
   });

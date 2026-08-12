@@ -70,7 +70,9 @@ public:
   
   bool ConsumeSample(int16_t sample[2]) override {
     int32_t mixed = (sample[0] + sample[1]) / 2; 
-    mixed = Amplify(mixed); // Aplica o volume do painel
+    mixed = (mixed * vol); // Multiplicação direta pelo volume global
+    if (mixed > 32767) mixed = 32767;
+    if (mixed < -32768) mixed = -32768;
     uint8_t dacValue = (mixed >> 8) + 128;
     
     int nextHead = (dacHead + 1) % DAC_BUF_SIZE;
@@ -335,7 +337,7 @@ async function getLiveTouch(){
     }
   } catch(e){}
 }
-setInterval(getLiveTouch, 500);
+setInterval(getLiveTouch, 150);
 
 async function calib(){
   let b = document.getElementById('btnCalib');

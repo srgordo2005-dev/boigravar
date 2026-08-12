@@ -374,20 +374,6 @@ carregar();
 void tocarAgora(String nomeArquivo) {
   if (nomeArquivo == "") return;
   if (!licenciado || bloqueado) return;
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    if (offline_plays > 0) { offline_plays = 0; prefs.putInt("offp", 0); }
-  } else {
-    offline_plays++;
-    prefs.putInt("offp", offline_plays);
-    if (offline_plays >= 100) {
-      if (mp3->isRunning()) mp3->stop();
-      if (file) delete file;
-      file = new AudioFileSourceLittleFS("/desconectado.mp3");
-      if(file->isOpen()) { mp3->begin(file, out); ultimaAtividade = millis(); }
-      return; 
-    }
-  }
 
   if (mp3->isRunning()) mp3->stop();
   if (file) delete file;
@@ -724,8 +710,6 @@ void setup() {
         Serial.println("MDNS ativo! Acesse http://boi.local");
       }
 
-      ligarAmpliETocar("conectado.mp3");
-
       // Telegram: Envia mensagem se não estiver licenciado ainda
       if (!licenciado) {
          String bname = prefs.getString("bname", "Sem Nome");
@@ -760,7 +744,7 @@ void setup() {
     Serial.print(apName);
     Serial.print(" | IP: ");
     Serial.println(WiFi.softAPIP());
-    ligarAmpliETocar("desconectado.mp3");
+    // Removido som de desconectado no boot
   }
 
   setupWebServer();

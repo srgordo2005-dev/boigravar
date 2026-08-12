@@ -1,0 +1,25 @@
+opus.o: \
+ C:\Users\Felip\OneDrive\Documentos\Arduino\libraries\ESP8266Audio\src\libopus\src\opus.c \
+ C:\Users\Felip\OneDrive\Documentos\Arduino\libraries\ESP8266Audio\src\libopus\src\config.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/include/config.h \
+ C:\Users\Felip\OneDrive\Documentos\Arduino\libraries\ESP8266Audio\src\libopus\src\opus.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/include/opus.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/include/opus_types.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/include/opus_defines.h \
+ C:\Users\Felip\OneDrive\Documentos\Arduino\libraries\ESP8266Audio\src\libopus\src\opus_private.h \
+ C:\Users\Felip\OneDrive\Documentos\Arduino\libraries\ESP8266Audio\src\libopus\src\arch.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/arch.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/opus_types.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/include/opus_types.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/opus_defines.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/include/opus_defines.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/fixed_generic.h \
+ C:\Users\Felip\OneDrive\Documentos\Arduino\libraries\ESP8266Audio\src\libopus\src\celt.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/celt.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/opus_custom.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/include/opus_custom.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/entenc.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/entcode.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/ecintrin.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/arch.h \
+ C:/Users/Felip/OneDrive/Documentos/Arduino/libraries/ESP8266Audio/src/libopus/celt/entdec.h

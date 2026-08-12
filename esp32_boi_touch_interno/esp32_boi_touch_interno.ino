@@ -31,6 +31,8 @@ void IRAM_ATTR dacTimerIsr() {
   }
 }
 
+extern float vol;
+
 // Classe customizada para usar o DAC interno com Timer de Hardware
 class AudioOutputCustomDAC : public AudioOutput {
   uint32_t sampleInterval;

@@ -388,18 +388,26 @@ void tocarAgora(String nomeArquivo) {
   if (mp3->isRunning()) mp3->stop();
   if (file) delete file;
   
-  // Tenta abrir no LittleFS, se falhar, tenta PROGMEM
+  // Tenta abrir no LittleFS primeiro
   file = new AudioFileSourceLittleFS(("/" + nomeArquivo).c_str());
+  
   if(!file->isOpen()){
     delete file;
-    file = new AudioFileSourcePROGMEM(progmem_audio_data[0], progmem_audio_sizes[0]);
+    file = nullptr;
+    // Se não está no LittleFS, procura no PROGMEM
+    for(int i = 0; i < num_progmem_audios; i++) {
+      if(nomeArquivo == String(progmem_audio_names[i])) {
+        file = new AudioFileSourcePROGMEM(progmem_audios[i], progmem_audio_sizes[i]);
+        break;
+      }
+    }
   }
   
-  if(file->isOpen()){
+  if(file && (file->isOpen() || (file->getSize() > 0))){ // getSize para checar progmem
     mp3->begin(file, out);
     ultimaAtividade = millis();
   } else {
-    delete file;
+    if (file) delete file;
     file = nullptr;
   }
 }

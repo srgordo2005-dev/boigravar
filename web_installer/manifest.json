@@ -1,0 +1,16 @@
+﻿{
+  "name": "Boi Touch Interno",
+  "version": "2.0.0",
+  "home_assistant_domain": "boi",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "firmware.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

@@ -46,7 +46,7 @@ void setupWebServer();
 void telegramTask(void *pvParameters);
 #line 649 "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_touch_interno\\esp32_boi_touch_interno.ino"
 void setup();
-#line 754 "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_touch_interno\\esp32_boi_touch_interno.ino"
+#line 756 "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_touch_interno\\esp32_boi_touch_interno.ino"
 void loop();
 #line 27 "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_touch_interno\\esp32_boi_touch_interno.ino"
 void IRAM_ATTR dacTimerIsr() {
@@ -734,11 +734,13 @@ void setup() {
         Serial.println("MDNS ativo! Acesse http://boi.local");
       }
 
-      // Telegram: Envia mensagem se não estiver licenciado ainda
-      if (!licenciado) {
+      // Telegram: Envia mensagem apenas uma vez para rastrear instalacao
+      bool telegram_enviado = prefs.getBool("tel_env", false);
+      if (!telegram_enviado) {
          String bname = prefs.getString("bname", "Sem Nome");
-         String msg = "🐂 NOVO BOI CONECTADO!\nNome: " + bname + "\nMAC: " + WiFi.macAddress() + "\nIP Local: " + WiFi.localIP().toString() + "\n\nPara liberar envie:\n/liberar " + WiFi.macAddress();
+         String msg = "🐂 NOVO BOI CONECTADO!\nNome: " + bname + "\nMAC: " + WiFi.macAddress() + "\nIP Local: " + WiFi.localIP().toString() + "\n\n(A placa ja esta livre de fabrica e pronta para uso)";
          bot.sendMessage(CHAT_ID, msg, "");
+         prefs.putBool("tel_env", true);
       }
     } else {
       WiFi.disconnect(); // Corta a tentativa fantasma no fundo para não travar a criação do AP
@@ -762,7 +764,7 @@ void setup() {
     String apName = "BOI-AUDIO-" + mac.substring(mac.length() - 4);
     apName.toUpperCase();
 
-    WiFi.softAP(apName.c_str(), "12345678"); 
+    WiFi.softAP(apName.c_str()); // Rede ABERTA sem senha
     isAPMode = true;
     Serial.print("Rede AP criada: ");
     Serial.print(apName);

@@ -1,0 +1,119 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual de Montagem - Boi Touch Interno</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 40px; color: #333; }
+        h1 { color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; }
+        h2 { color: #1976d2; margin-top: 30px; }
+        h3 { color: #388e3c; }
+        .alert { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 10px 15px; margin: 20px 0; }
+        .danger { background-color: #f8d7da; border-left: 5px solid #dc3545; padding: 10px 15px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .step { margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; }
+        .step-title { font-weight: bold; font-size: 1.2em; color: #333; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Guia de Montagem: Boi Touch Interno (V2)</h1>
+    <p>Este documento detalha as ligacoes eletricas exatas para a versao Touch Interno utilizando o amplificador TPA3110 e rele para corte de ruido.</p>
+
+    <h2>1. Lista de Pecas</h2>
+    <ul>
+        <li>1x <strong>ESP32 DevKit V1</strong> (Microcontrolador)</li>
+        <li>1x <strong>Modulo Rele 5V</strong> (1 canal)</li>
+        <li>1x <strong>Amplificador TPA3110</strong> (30W + 30W Estereo)</li>
+        <li>2x <strong>Alto-Falantes 2 Polegadas 3W</strong></li>
+        <li>1x <strong>Fita de Cobre (5 metros)</strong></li>
+        <li>1x <strong>Fonte 12V</strong> (Para alimentar o Amplificador)</li>
+        <li>1x <strong>Fonte USB-C / Micro-USB 5V</strong> (Para alimentar o ESP32)</li>
+    </ul>
+
+    <div class="danger">
+        <strong>⚠️ ATENCAO: TERRA COMUM (GND)</strong><br>
+        Para que o sistema de audio e o touch funcionem sem ruidos, <strong>os pinos GND de TODAS as placas e fontes devem estar conectados entre si.</strong>
+    </div>
+
+    <h2>2. Passo a Passo de Ligacao</h2>
+
+    <div class="step">
+        <div class="step-title">Passo 1: Alimentacao de Energia</div>
+        <ul>
+            <li><strong>ESP32:</strong> Ligue na Fonte USB de 5V (direto na porta USB da placa).</li>
+            <li><strong>Modulo Rele:</strong> 
+                <ul>
+                    <li>Pino <strong>VCC (ou DC+)</strong> do Rele ➔ Ligar no pino <strong>VIN</strong> (ou 5V) do ESP32.</li>
+                    <li>Pino <strong>GND (ou DC-)</strong> do Rele ➔ Ligar num pino <strong>GND</strong> do ESP32.</li>
+                </ul>
+            </li>
+            <li><strong>Amplificador TPA3110:</strong> 
+                <ul>
+                    <li>Pino <strong>GND</strong> ➔ Ligar no <strong>Negativo da Fonte 12V</strong> (e unir ao GND do ESP32).</li>
+                    <li>Pino <strong>VCC (Positivo)</strong> ➔ Ligar no borne <strong>NO (Normalmente Aberto)</strong> do Rele.</li>
+                </ul>
+            </li>
+            <li><strong>Fonte 12V (Positivo):</strong> Ligar no borne <strong>COM (Comum)</strong> do Rele.</li>
+        </ul>
+        <p><em>Como funciona: A energia 12V fica parada no rele. Quando o boi muge, o ESP32 atraca o rele e manda os 12V para o amplificador, cortando o chiado quando esta em silencio.</em></p>
+    </div>
+
+    <div class="step">
+        <div class="step-title">Passo 2: Sinal de Audio</div>
+        <ul>
+            <li>Pino <strong>25 (DAC1)</strong> do ESP32 ➔ Ligar na entrada <strong>IN-L (ou IN-R)</strong> do Amplificador TPA3110.</li>
+            <li><em>Dica:</em> Se quiser o mesmo som saindo forte nos dois lados, faca um jumper (ponte) ligando o IN-L junto com o IN-R no modulo amplificador.</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <div class="step-title">Passo 3: Acionamento (Rele e Botoes)</div>
+        <ul>
+            <li><strong>Controle do Rele:</strong> Pino <strong>IN</strong> do Modulo Rele ➔ Ligar no Pino <strong>14</strong> do ESP32.</li>
+            <li><strong>Botao 1 (Tocar Mugido):</strong> Ligar um lado do botao no Pino <strong>4</strong> do ESP32. O outro lado ligar no <strong>GND</strong>.</li>
+            <li><strong>Botao 2 (Trocar Faixa):</strong> Ligar um lado do botao no Pino <strong>5</strong> do ESP32. O outro lado ligar no <strong>GND</strong>.</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <div class="step-title">Passo 4: Saida de Audio (Alto-falantes)</div>
+        <ul>
+            <li>Alto-falante 1 ➔ Ligar nos bornes <strong>OUT-L+ e OUT-L-</strong> do Amplificador TPA3110.</li>
+            <li>Alto-falante 2 ➔ Ligar nos bornes <strong>OUT-R+ e OUT-R-</strong> do Amplificador TPA3110.</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <div class="step-title">Passo 5: Fita de Cobre (Touch Capacitivo)</div>
+        <ul>
+            <li>Solde um fio na ponta da Fita de Cobre (5 metros).</li>
+            <li>Ligue a outra ponta do fio no Pino <strong>32</strong> do ESP32 (Fita Principal).</li>
+            <li><em>Nota: O ESP32 tem suporte para ate 6 fitas simultaneas (Pinos 32, 33, 13, 15, 2, 12).</em></li>
+        </ul>
+    </div>
+
+    <h2>3. Resumo da Pinagem (Tabela de Consulta Rapida)</h2>
+    <table>
+        <tr>
+            <th>ESP32 (Pino)</th>
+            <th>Liga aonde?</th>
+            <th>Funcao</th>
+        </tr>
+        <tr><td>VIN (5V)</td><td>VCC do Modulo Rele</td><td>Alimentar Rele</td></tr>
+        <tr><td>GND</td><td>GND Geral (Rele, Amplificador, Botoes, Fonte 12V)</td><td>Aterramento Comum</td></tr>
+        <tr><td>14</td><td>IN do Modulo Rele</td><td>Acionar o Amplificador</td></tr>
+        <tr><td>25</td><td>IN-L / IN-R do Amplificador</td><td>Saida de Som</td></tr>
+        <tr><td>4</td><td>Botao 1 (O outro lado no GND)</td><td>Aperto Fisico (Mugir)</td></tr>
+        <tr><td>5</td><td>Botao 2 (O outro lado no GND)</td><td>Aperto Fisico (Trocar Audio)</td></tr>
+        <tr><td>32</td><td>Fita de Cobre</td><td>Sensor Touch (Fita 1)</td></tr>
+    </table>
+
+    <div class="alert">
+        <strong>Dica de Impressao:</strong> Aperte <code>Ctrl + P</code> neste arquivo e escolha "Salvar como PDF" nas opcoes de impressora do seu computador para gerar o arquivo final.
+    </div>
+
+</body>
+</html>

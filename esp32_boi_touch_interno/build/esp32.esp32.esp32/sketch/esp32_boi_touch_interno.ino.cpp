@@ -46,7 +46,7 @@ void setupWebServer();
 void telegramTask(void *pvParameters);
 #line 649 "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_touch_interno\\esp32_boi_touch_interno.ino"
 void setup();
-#line 755 "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_touch_interno\\esp32_boi_touch_interno.ino"
+#line 754 "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_touch_interno\\esp32_boi_touch_interno.ino"
 void loop();
 #line 27 "C:\\Users\\Felip\\OneDrive\\Documentos\\boi\\esp32_boi_touch_interno\\esp32_boi_touch_interno.ino"
 void IRAM_ATTR dacTimerIsr() {
@@ -152,7 +152,7 @@ unsigned long tempoInicioAmpli = 0;
 String trackPendente = "";
 
 bool isAPMode = false;
-bool licenciado = false;
+bool licenciado = true;
 bool bloqueado = false;
 int offline_plays = 0;
 
@@ -700,7 +700,6 @@ void setup() {
     ultimoMax[i] = 0;
   }
   
-  licenciado = prefs.getBool("lic", false);
   bname = prefs.getString("bname", "Boi");
   
   carregarFaixasDaMemoria(); // Popula o Array da Playlist inicialmente

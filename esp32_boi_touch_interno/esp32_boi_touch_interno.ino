@@ -127,7 +127,7 @@ unsigned long tempoInicioAmpli = 0;
 String trackPendente = "";
 
 bool isAPMode = false;
-bool licenciado = false;
+bool licenciado = true;
 bool bloqueado = false;
 int offline_plays = 0;
 
@@ -675,7 +675,6 @@ void setup() {
     ultimoMax[i] = 0;
   }
   
-  licenciado = prefs.getBool("lic", false);
   bname = prefs.getString("bname", "Boi");
   
   carregarFaixasDaMemoria(); // Popula o Array da Playlist inicialmente
